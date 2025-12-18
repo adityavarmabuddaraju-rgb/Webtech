@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Card Style</title>
+    <style>
+        /* Container styling for centering the card on the page */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* The Product Card */
+        .product-card {
+            background-color: #fff;
+            width: 9000px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0; /* Border */
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Initial Box-Shadow */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 20px; /* Margin */
+        }
+
+        /* Hover effect for the card itself */
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-image {
+            width: 300;
+            height: 300px;
+            object-fit: cover;
+            background-color: #f9f9f9;
+        }
+
+        .product-info {
+            padding: 20px; /* Padding */
+        }
+
+        .product-title {
+            font-size: 1.25rem;
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .product-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 20px;
+        }
+
+        /* "Buy Now" Button styling */
+        .buy-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Button Hover Effect */
+        .buy-btn:hover {
+            background-color: #e84118;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="product-card">
+        <img src="product-image.jpg" alt="Product Image" class="product-image">
+        
+        <div class="product-info">
+            <h3 class="product-title">Premium Wireless Headphones</h3>
+            <p class="product-description">Experience crystal clear sound and noise cancellation with our latest ergonomic design.</p>
+            <span class="product-price">$199.00</span>
+            <button class="buy-btn">Buy Now</button>
+        </div>
+    </div>
+
+</body>
+</html>
