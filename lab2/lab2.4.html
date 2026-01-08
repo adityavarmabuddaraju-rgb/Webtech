@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Registration & Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 20px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+
+        .delete-btn {
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .clear-btn {
+            background: rgb(249, 239, 239);
+            color: white;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>User Registration</h2>
+
+    <label>Name</label>
+    <input type="text" id="name">
+
+    <label>Email</label>
+    <input type="email" id="email">
+
+    <label>Mobile Number</label>
+    <input type="text" id="mobile">
+
+    <label>Password</label>
+    <input type="password" id="password">
+
+    <button onclick="registerUser()">Register</button>
+
+    <p class="error" id="error"></p>
+
+    <h2>Registered Users</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="userTable"></tbody>
+    </table>
+
+    <button class="clear-btn" onclick="clearAllUsers()">Clear All Users</button>
+</div>
+
+<script>
+    function getUsers() {
+        return JSON.parse(localStorage.getItem("users")) || [];
+    }
+
+    function saveUsers(users) {
+        localStorage.setItem("users", JSON.stringify(users));
+    }
+
+    function registerUser() {
+        const name = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const mobile = document.getElementById("mobile").value.trim();
+        const password = document.getElementById("password").value.trim();
+        const error = document.getElementById("error");
+
+        error.innerText = "";
+
+        if (!name || !email || !mobile || !password) {
+            error.innerText = "All fields are mandatory";
+            return;
+        }
+
+        if (!/^\d{10}$/.test(mobile)) {
+            error.innerText = "Mobile number must be 10 digits";
+            return;
+        }
+
+        if (password.length < 6) {
+            error.innerText = "Password must be at least 6 characters";
+            return;
+        }
+
+        let users = getUsers();
+
+        if (users.some(user => user.email === email)) {
+            error.innerText = "Email already registered";
+            return;
+        }
+
+        users.push({ name, email, mobile, password });
+        saveUsers(users);
+        displayUsers();
+
+        document.getElementById("name").value = "";
+        document.getElementById("email").value = "";
+        document.getElementById("mobile").value = "";
+        document.getElementById("password").value = "";
+    }
+
+    function displayUsers() {
+        const users = getUsers();
+        const table = document.getElementById("userTable");
+        table.innerHTML = "";
+
+        users.forEach((user, index) => {
+            table.innerHTML += `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.mobile}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteUser(${index})">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function deleteUser(index) {
+        let users = getUsers();
+        users.splice(index, 1);
+        saveUsers(users);
+        displayUsers();
+    }
+
+    function clearAllUsers() {
+        localStorage.removeItem("users");
+        displayUsers();
+    }
+
+    window.onload = displayUsers;
+</script>
+
+</body>
+</html>
