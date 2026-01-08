@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HTML5 Canvas Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        canvas {
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body>
+
+<h2>HTML5 Canvas Demonstration</h2>
+
+<!-- Canvas Element -->
+<canvas id="myCanvas" width="500" height="300"></canvas>
+
+<script>
+    // Get canvas and context
+    const canvas = document.getElementById("myCanvas");
+    const ctx = canvas.getContext("2d");
+
+    /* ===== Filled Rectangle ===== */
+    ctx.fillStyle = "blue";
+    ctx.fillRect(30, 30, 120, 80);
+
+    /* ===== Filled Circle ===== */
+    ctx.beginPath();
+    ctx.arc(250, 80, 40, 0, 2 * Math.PI);
+    ctx.fillStyle = "green";
+    ctx.fill();
+
+    /* ===== Straight Line ===== */
+    ctx.beginPath();
+    ctx.moveTo(50, 200);
+    ctx.lineTo(450, 200);
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    /* ===== Text ===== */
+    ctx.font = "24px Arial";
+    ctx.fillStyle = "black";
+    ctx.fillText("HTML5 Canvas", 170, 260);
+</script>
+
+</body>
+</html>
