@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dynamic Registration Form</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        font-family: "Segoe UI", Tahoma, sans-serif;
+    }
+
+    form {
+        width: 430px;
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        outline: none;
+        transition: 0.3s;
+        font-size: 14px;
+    }
+
+    input:focus, select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 5px rgba(102,126,234,0.5);
+    }
+
+    .error {
+        border-color: #e63946 !important;
+        background: #fff5f5;
+    }
+
+    .success {
+        border-color: #2ecc71 !important;
+        background: #f4fff8;
+    }
+
+    small {
+        color: #e63946;
+        display: none;
+        font-size: 12px;
+    }
+
+    .skills-box {
+        display: none;
+    }
+
+    button {
+        width: 100%;
+        margin-top: 18px;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #afb8e3, #7ac2a11c);
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    button:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+</style>
+</head>
+
+<body>
+
+<form id="registerForm">
+    <h2>User Registration</h2>
+
+    <input type="text" id="name" placeholder="Full Name">
+    <small>Name is required</small>
+
+    <input type="email" id="email" placeholder="Email">
+    <small>Invalid email domain (@gmail.com / @edu.in)</small>
+
+    <input type="password" id="password" placeholder="Password">
+    <small>Password does not meet requirements</small>
+
+    <input type="password" id="confirmPassword" placeholder="Confirm Password">
+    <small>Passwords do not match</small>
+
+    <input type="number" id="age" placeholder="Age">
+    <small>Age does not meet role requirement</small>
+
+    <select id="role">
+        <option value="">Select Role</option>
+        <option value="student">Student</option>
+        <option value="teacher">Teacher</option>
+        <option value="admin">Admin</option>
+    </select>
+    <small>Please select a role</small>
+
+    <div class="skills-box" id="skillsBox">
+        <input type="text" id="skills" placeholder="Skills (comma separated)">
+        <small>Skills required for this role</small>
+    </div>
+
+    <button type="submit">Register</button>
+</form>
+
+<script>
+const form = document.getElementById("registerForm");
+const role = document.getElementById("role");
+const skillsBox = document.getElementById("skillsBox");
+
+function showError(input) {
+    input.classList.add("error");
+    input.classList.remove("success");
+    input.nextElementSibling.style.display = "block";
+}
+
+function showSuccess(input) {
+    input.classList.remove("error");
+    input.classList.add("success");
+    input.nextElementSibling.style.display = "none";
+}
+
+// Email validation
+function validateEmail(email) {
+    return email.endsWith("@gmail.com") || email.endsWith("@edu.in");
+}
+
+// Password rules by role
+function validatePassword(password, role) {
+    if (role === "student") return password.length >= 6;
+    if (role === "teacher") return password.length >= 8;
+    if (role === "admin")
+        return password.length >= 10 &&
+               /[A-Z]/.test(password) &&
+               /[0-9]/.test(password) &&
+               /[!@#$%^&*]/.test(password);
+    return false;
+}
+
+// Show/hide skills
+role.addEventListener("change", () => {
+    if (role.value === "teacher" || role.value === "admin") {
+        skillsBox.style.display = "block";
+    } else {
+        skillsBox.style.display = "none";
+    }
+});
+
+// Live validation
+form.addEventListener("input", () => {
+    const name = document.getElementById("name");
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("confirmPassword");
+    const age = document.getElementById("age");
+    const skills = document.getElementById("skills");
+
+    name.value ? showSuccess(name) : showError(name);
+
+    validateEmail(email.value) ? showSuccess(email) : showError(email);
+
+    validatePassword(password.value, role.value)
+        ? showSuccess(password)
+        : showError(password);
+
+    password.value === confirmPassword.value && confirmPassword.value
+        ? showSuccess(confirmPassword)
+        : showError(confirmPassword);
+
+    const minAge =
+        role.value === "admin" ? 31 :
+        role.value === "teacher" ? 21 : 18;
+
+    age.value >= minAge ? showSuccess(age) : showError(age);
+
+    if (role.value === "teacher" || role.value === "admin") {
+        skills.value ? showSuccess(skills) : showError(skills);
+    }
+});
+
+// Prevent submission if invalid
+form.addEventListener("submit", e => {
+    if (document.querySelectorAll(".error").length > 0) {
+        e.preventDefault();
+        alert("Please correct all errors before submitting.");
+    } else {
+        alert("Registration successful!");
+    }
+});
+</script>
+
+</body>
+</html>
