@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dynamic Survey Builder</title>
+
+<style>
+/* ---------- GLOBAL ---------- */
+body {
+    font-family: "Segoe UI", sans-serif;
+    background: #f4f6f8;
+    padding: 30px;
+}
+
+.container {
+    max-width: 700px;
+    margin: auto;
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* ---------- QUESTIONS ---------- */
+.question {
+    margin-bottom: 20px;
+}
+
+label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 8px;
+}
+
+.options label {
+    font-weight: normal;
+    display: block;
+}
+
+.error {
+    color: red;
+    font-size: 13px;
+    margin-top: 5px;
+    display: none;
+}
+
+/* ---------- BUTTON ---------- */
+button {
+    width: 100%;
+    padding: 10px;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>📋 Survey Form</h1>
+    <form id="surveyForm"></form>
+</div>
+
+<script>
+/* ---------- QUESTION DATA ---------- */
+const questions = [
+    {
+        id: "q1",
+        text: "What is your name?",
+        type: "text",
+        required: true,
+        maxLength: 20
+    },
+    {
+        id: "q2",
+        text: "Select your gender",
+        type: "radio",
+        required: true,
+        options: ["Male", "Female", "Other"]
+    },
+    {
+        id: "q3",
+        text: "Which skills do you have?",
+        type: "checkbox",
+        required: true,
+        minSelect: 1,
+        maxSelect: 2,
+        options: ["JavaScript", "Python", "Java", "C++"]
+    }
+];
+
+/* ---------- FORM GENERATION ---------- */
+const form = document.getElementById("surveyForm");
+
+questions.forEach(question => {
+    const div = document.createElement("div");
+    div.className = "question";
+
+    let html = `<label>${question.text}</label>`;
+
+    if (question.type === "text") {
+        html += `
+            <input type="text" id="${question.id}">
+        `;
+    }
+
+    if (question.type === "radio") {
+        html += `<div class="options">`;
+        question.options.forEach(opt => {
+            html += `
+                <label>
+                    <input type="radio" name="${question.id}" value="${opt}">
+                    ${opt}
+                </label>
+            `;
+        });
+        html += `</div>`;
+    }
+
+    if (question.type === "checkbox") {
+        html += `<div class="options">`;
+        question.options.forEach(opt => {
+            html += `
+                <label>
+                    <input type="checkbox" name="${question.id}" value="${opt}">
+                    ${opt}
+                </label>
+            `;
+        });
+        html += `</div>`;
+    }
+
+    html += `<div class="error" id="${question.id}-error"></div>`;
+    div.innerHTML = html;
+    form.appendChild(div);
+});
+
+/* ---------- SUBMIT BUTTON ---------- */
+const submitBtn = document.createElement("button");
+submitBtn.textContent = "Submit Survey";
+submitBtn.type = "submit";
+form.appendChild(submitBtn);
+
+/* ---------- VALIDATION ---------- */
+form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    let isValid = true;
+
+    questions.forEach(question => {
+        const errorDiv = document.getElementById(`${question.id}-error`);
+        errorDiv.style.display = "none";
+
+        if (question.type === "text") {
+            const input = document.getElementById(question.id);
+            if (question.required && input.value.trim() === "") {
+                showError(errorDiv, "This field is required");
+                isValid = false;
+            } else if (input.value.length > question.maxLength) {
+                showError(errorDiv, `Maximum ${question.maxLength} characters allowed`);
+                isValid = false;
+            }
+        }
+
+        if (question.type === "radio") {
+            const selected = document.querySelector(`input[name="${question.id}"]:checked`);
+            if (question.required && !selected) {
+                showError(errorDiv, "Please select an option");
+                isValid = false;
+            }
+        }
+
+        if (question.type === "checkbox") {
+            const checked = document.querySelectorAll(`input[name="${question.id}"]:checked`);
+            if (question.required && checked.length < question.minSelect) {
+                showError(errorDiv, `Select at least ${question.minSelect} option(s)`);
+                isValid = false;
+            }
+            if (checked.length > question.maxSelect) {
+                showError(errorDiv, `Select at most ${question.maxSelect} option(s)`);
+                isValid = false;
+            }
+        }
+    });
+
+    if (isValid) {
+        alert("Survey submitted successfully!");
+    }
+});
+
+/* ---------- ERROR DISPLAY ---------- */
+function showError(element, message) {
+    element.textContent = message;
+    element.style.display = "block";
+}
+</script>
+
+</body>
+</html>

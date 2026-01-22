@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Multi Step Form</title>
+
+<style>
+/* ---------- BASE ---------- */
+body {
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.form-box {
+    width: 420px;
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+/* ---------- PROGRESS ---------- */
+.progress {
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #2563eb;
+    transition: width 0.3s;
+}
+
+/* ---------- STEPS ---------- */
+.step {
+    display: none;
+}
+
+.step.active {
+    display: block;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+input.error {
+    border-color: red;
+}
+
+/* ---------- BUTTONS ---------- */
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.next {
+    background: #2563eb;
+    color: white;
+}
+
+.prev {
+    background: #9ca3af;
+    color: white;
+}
+
+.submit {
+    background: #16a34a;
+    color: white;
+}
+
+/* ---------- ERROR ---------- */
+.error-text {
+    color: red;
+    font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="form-box">
+    <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="step active">
+        <h3>Step 1: Personal Info</h3>
+        <input id="name" placeholder="Full Name">
+        <input id="age" type="number" placeholder="Age">
+        <div class="error-text" id="err1"></div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step">
+        <h3>Step 2: Contact Info</h3>
+        <input id="email" placeholder="Email">
+        <input id="phone" placeholder="Phone Number">
+        <div class="error-text" id="err2"></div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step">
+        <h3>Step 3: Account Setup</h3>
+        <input id="password" type="password" placeholder="Password">
+        <input id="confirm" type="password" placeholder="Confirm Password">
+        <div class="error-text" id="err3"></div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step">
+        <h3>Step 4: Confirmation</h3>
+        <p>Review details and submit</p>
+        <div class="error-text" id="err4"></div>
+    </div>
+
+    <div class="buttons">
+        <button class="prev" onclick="prevStep()">Back</button>
+        <button class="next" onclick="nextStep()">Next</button>
+        <button class="submit" onclick="submitForm()" style="display:none">Submit</button>
+    </div>
+</div>
+
+<script>
+/* ---------- STATE ---------- */
+let currentStep = 0;
+const steps = document.querySelectorAll(".step");
+
+const userData = {
+    name: "",
+    age: "",
+    email: "",
+    phone: "",
+    password: ""
+};
+
+/* ---------- PROGRESS ---------- */
+function updateProgress() {
+    document.getElementById("progressBar").style.width =
+        ((currentStep + 1) / steps.length) * 100 + "%";
+}
+
+/* ---------- SHOW STEP ---------- */
+function showStep() {
+    steps.forEach(step => step.classList.remove("active"));
+    steps[currentStep].classList.add("active");
+
+    document.querySelector(".prev").style.display =
+        currentStep === 0 ? "none" : "inline-block";
+
+    document.querySelector(".next").style.display =
+        currentStep === steps.length - 1 ? "none" : "inline-block";
+
+    document.querySelector(".submit").style.display =
+        currentStep === steps.length - 1 ? "inline-block" : "none";
+
+    updateProgress();
+}
+
+/* ---------- VALIDATION ---------- */
+function validateStep() {
+    let valid = true;
+
+    document.querySelectorAll(".error-text").forEach(e => e.textContent = "");
+
+    if (currentStep === 0) {
+        const name = nameInput();
+        const age = ageInput();
+        if (!name || age < 18) {
+            err1.textContent = "Enter valid name and age (18+)";
+            valid = false;
+        }
+        userData.name = name;
+        userData.age = age;
+    }
+
+    if (currentStep === 1) {
+        const email = emailInput();
+        const phone = phoneInput();
+        if (!email.includes("@") || phone.length < 10) {
+            err2.textContent = "Invalid email or phone";
+            valid = false;
+        }
+        userData.email = email;
+        userData.phone = phone;
+    }
+
+    if (currentStep === 2) {
+        const pass = passwordInput();
+        const confirm = confirmInput();
+        if (pass.length < 6 || pass !== confirm) {
+            err3.textContent = "Passwords must match (min 6 chars)";
+            valid = false;
+        }
+        userData.password = pass;
+    }
+
+    return valid;
+}
+
+/* ---------- NAVIGATION ---------- */
+function nextStep() {
+    if (!validateStep()) return;
+    currentStep++;
+    showStep();
+}
+
+function prevStep() {
+    currentStep--;
+    showStep();
+}
+
+/* ---------- SUBMIT ---------- */
+function submitForm() {
+    if (!validateStep()) return;
+    alert("Form submitted successfully!");
+    console.log(userData);
+}
+
+/* ---------- INPUT HELPERS ---------- */
+const nameInput = () => document.getElementById("name").value.trim();
+const ageInput = () => Number(document.getElementById("age").value);
+const emailInput = () => document.getElementById("email").value.trim();
+const phoneInput = () => document.getElementById("phone").value.trim();
+const passwordInput = () => document.getElementById("password").value;
+const confirmInput = () => document.getElementById("confirm").value;
+
+showStep();
+</script>
+
+</body>
+</html>
