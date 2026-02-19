@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Product Inventory System</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
+.container{
+    width:95%;
+    max-width:1000px;
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.25);
+}
+h2{
+    text-align:center;
+    margin-bottom:20px;
+}
+input,button{
+    padding:8px;
+    margin:5px;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+button{
+    background:#4CAF50;
+    color:white;
+    cursor:pointer;
+}
+button:hover{
+    background:#388e3c;
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+th,td{
+    padding:10px;
+    border:1px solid #ccc;
+    text-align:center;
+}
+th{
+    background:#333;
+    color:white;
+}
+.low-stock{
+    background-color:#ffcccc;
+    font-weight:bold;
+}
+.message{
+    text-align:center;
+    margin-top:10px;
+    font-weight:bold;
+}
+.success{ color:green; }
+.error{ color:red; }
+.total{
+    margin-top:15px;
+    font-size:18px;
+    font-weight:bold;
+    text-align:right;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>📦 Product Inventory System</h2>
+
+<input type="text" id="id" placeholder="Product ID">
+<input type="text" id="name" placeholder="Name">
+<input type="text" id="category" placeholder="Category">
+<input type="number" id="price" placeholder="Price">
+<input type="number" id="stock" placeholder="Stock Quantity">
+<br>
+
+<button onclick="addProduct()">Add</button>
+<button onclick="editProduct()">Edit</button>
+<button onclick="deleteProduct()">Delete</button>
+
+<br>
+
+<input type="text" id="searchCategory" placeholder="Search by Category">
+<button onclick="searchByCategory()">Search</button>
+<button onclick="displayProducts()">Show All</button>
+
+<div class="message" id="msg"></div>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Category</th>
+<th>Price</th>
+<th>Stock</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody id="inventoryTable"></tbody>
+</table>
+
+<div class="total" id="totalValue"></div>
+
+</div>
+
+<script>
+
+let products = [];
+
+async function loadProducts(){
+    try{
+        const response = await fetch("inventory.json");
+
+        if(!response.ok){
+            throw new Error("Failed to load inventory.json");
+        }
+
+        products = await response.json();
+        displayProducts();
+    }
+    catch(error){
+        showMsg("Error: " + error.message,"error");
+    }
+}
+
+function displayProducts(list = products){
+
+    const table = document.getElementById("inventoryTable");
+    table.innerHTML="";
+    let total = 0;
+
+    if(list.length === 0){
+        table.innerHTML = `<tr><td colspan="6">No products found</td></tr>`;
+        document.getElementById("totalValue").textContent="";
+        return;
+    }
+
+    list.forEach(product=>{
+
+        const value = product.price * product.stock;
+        total += value;
+
+        const rowClass = product.stock < 5 ? "low-stock" : "";
+
+        table.innerHTML += `
+        <tr class="${rowClass}">
+            <td>${product.id}</td>
+            <td>${product.name}</td>
+            <td>${product.category}</td>
+            <td>₹${product.price}</td>
+            <td>${product.stock}</td>
+            <td>₹${value}</td>
+        </tr>`;
+    });
+
+    document.getElementById("totalValue").textContent =
+        "Total Inventory Value: ₹" + total;
+}
+
+function addProduct(){
+
+    const id = document.getElementById("id").value.trim();
+    const name = document.getElementById("name").value.trim();
+    const category = document.getElementById("category").value.trim();
+    const price = parseFloat(document.getElementById("price").value);
+    const stock = parseInt(document.getElementById("stock").value);
+
+    if(!id || !name || !category || isNaN(price) || isNaN(stock) || price < 0 || stock < 0){
+        showMsg("Please enter valid product details","error");
+        return;
+    }
+
+    if(products.find(p=>p.id===id)){
+        showMsg("Product ID already exists","error");
+        return;
+    }
+
+    products.push({id,name,category,price,stock});
+
+    clearForm();
+    displayProducts();
+    showMsg("Product added successfully","success");
+}
+
+function editProduct(){
+
+    const id = document.getElementById("id").value.trim();
+    const price = parseFloat(document.getElementById("price").value);
+    const stock = parseInt(document.getElementById("stock").value);
+
+    const product = products.find(p=>p.id===id);
+
+    if(!product){
+        showMsg("Product not found","error");
+        return;
+    }
+
+    if(!isNaN(price) && price >= 0) product.price = price;
+    if(!isNaN(stock) && stock >= 0) product.stock = stock;
+
+    displayProducts();
+    showMsg("Product updated successfully","success");
+}
+
+function deleteProduct(){
+
+    const id = document.getElementById("id").value.trim();
+    const index = products.findIndex(p=>p.id===id);
+
+    if(index===-1){
+        showMsg("Product not found","error");
+        return;
+    }
+
+    if(confirm("Are you sure you want to delete this product?")){
+        products.splice(index,1);
+        displayProducts();
+        showMsg("Product deleted successfully","success");
+    }
+}
+
+function searchByCategory(){
+
+    const category = document.getElementById("searchCategory").value.trim();
+
+    if(!category){
+        showMsg("Enter category to search","error");
+        return;
+    }
+
+    const filtered = products.filter(p =>
+        p.category.toLowerCase().includes(category.toLowerCase())
+    );
+
+    if(filtered.length===0){
+        showMsg("No products found in this category","error");
+    }
+
+    displayProducts(filtered);
+}
+
+function clearForm(){
+    document.getElementById("id").value="";
+    document.getElementById("name").value="";
+    document.getElementById("category").value="";
+    document.getElementById("price").value="";
+    document.getElementById("stock").value="";
+}
+
+function showMsg(text,type){
+    const msg=document.getElementById("msg");
+    msg.className="message "+type;
+    msg.textContent=text;
+}
+
+loadProducts();
+
+</script>
+
+</body>
+</html>
