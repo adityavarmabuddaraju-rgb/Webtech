@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Live Product Search</title>
+<title>Product Inventory System</title>
 
 <style>
 body{
@@ -12,83 +12,63 @@ body{
     display:flex;
     justify-content:center;
     align-items:center;
-    height:100vh;
+    min-height:100vh;
 }
 
 .container{
-    width:90%;
-    max-width:650px;
+    width:95%;
+    max-width:1000px;
     background:white;
     padding:25px;
     border-radius:15px;
     box-shadow:0 12px 30px rgba(0,0,0,0.25);
 }
 
-h2{
-    text-align:center;
-}
+h2{text-align:center;}
 
-input{
-    width:100%;
-    padding:10px;
+input,select,button{
+    padding:8px;
+    margin:5px;
     border-radius:6px;
     border:1px solid #ccc;
-    margin-bottom:10px;
 }
 
-.results{
-    margin-top:10px;
+button{
+    background:#667eea;
+    color:white;
+    cursor:pointer;
 }
 
-.card{
-    padding:12px;
+button:hover{
+    background:#5a67d8;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+
+th,td{
     border:1px solid #ddd;
-    border-radius:8px;
-    margin-bottom:10px;
-    transition:0.3s;
-}
-
-.card:hover{
-    transform:scale(1.02);
-    background:#f5f5ff;
-}
-
-.loader{
-    display:none;
+    padding:8px;
     text-align:center;
-    margin-top:10px;
 }
 
-.spinner{
-    width:25px;
-    height:25px;
-    border:4px solid #ccc;
-    border-top:4px solid #667eea;
-    border-radius:50%;
-    animation:spin 1s linear infinite;
-    margin:auto;
+th{
+    background:#667eea;
+    color:white;
 }
 
-@keyframes spin{
-    to{ transform:rotate(360deg); }
-}
-
-.message{
-    text-align:center;
-    margin-top:10px;
+.low-stock{
+    background:#ffe6e6;
     font-weight:bold;
-    color:red;
 }
 
-.count{
+.total{
+    margin-top:15px;
+    font-weight:bold;
     text-align:right;
-    font-size:14px;
-    margin-top:5px;
-    color:#555;
-}
-
-.highlight{
-    background:yellow;
 }
 </style>
 </head>
@@ -96,105 +76,143 @@ input{
 <body>
 
 <div class="container">
-<h2>🔍 Smart Product Search</h2>
+<h2>📦 Product Inventory System</h2>
 
-<input type="text" id="searchInput" placeholder="Search products...">
+<!-- Add Product -->
+<input type="text" id="id" placeholder="Product ID">
+<input type="text" id="name" placeholder="Name">
+<input type="text" id="category" placeholder="Category">
+<input type="number" id="price" placeholder="Price">
+<input type="number" id="stock" placeholder="Stock">
+<button onclick="addProduct()">Add Product</button>
 
-<div class="loader" id="loader">
-    <div class="spinner"></div>
-</div>
+<br>
 
-<div class="count" id="count"></div>
-<div class="results" id="results"></div>
-<div class="message" id="message"></div>
+<input type="text" id="search" placeholder="Search by name...">
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Category</th>
+<th>Price</th>
+<th>Stock</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="productTable"></tbody>
+</table>
+
+<div class="total" id="totalValue"></div>
 
 </div>
 
 <script>
 
-const searchInput = document.getElementById("searchInput");
-const resultsDiv = document.getElementById("results");
-const message = document.getElementById("message");
-const loader = document.getElementById("loader");
-const countDiv = document.getElementById("count");
+// Initial JSON Data
+let products = [
+  { id:"P1", name:"iPhone 15", price:79999, category:"Mobile", stock:4 },
+  { id:"P2", name:"Samsung Galaxy S24", price:74999, category:"Mobile", stock:10 },
+  { id:"P3", name:"Dell Inspiron", price:55000, category:"Laptop", stock:3 },
+  { id:"P4", name:"Sony Headphones", price:5000, category:"Accessories", stock:15 }
+];
 
-let timer;
+const table = document.getElementById("productTable");
+const totalDiv = document.getElementById("totalValue");
 
-// Debounce function
-function debounce(func, delay){
-    return function(){
-        clearTimeout(timer);
-        timer = setTimeout(func, delay);
-    }
+function displayProducts(list = products){
+
+    table.innerHTML="";
+    let total = 0;
+
+    list.forEach(product => {
+
+        total += product.price * product.stock;
+
+        const row = document.createElement("tr");
+
+        if(product.stock < 5){
+            row.classList.add("low-stock");
+        }
+
+        row.innerHTML = `
+            <td>${product.id}</td>
+            <td>${product.name}</td>
+            <td>${product.category}</td>
+            <td>₹${product.price}</td>
+            <td>${product.stock}</td>
+            <td>
+                <button onclick="editProduct('${product.id}')">Edit</button>
+                <button onclick="deleteProduct('${product.id}')">Delete</button>
+            </td>
+        `;
+
+        table.appendChild(row);
+    });
+
+    totalDiv.textContent = "Total Inventory Value: ₹" + total;
 }
 
-// Highlight matched text
-function highlight(text, query){
-    const regex = new RegExp(`(${query})`, "gi");
-    return text.replace(regex, '<span class="highlight">$1</span>');
-}
+// Add Product
+function addProduct(){
 
-async function searchProducts(){
+    const id = document.getElementById("id").value.trim();
+    const name = document.getElementById("name").value.trim();
+    const category = document.getElementById("category").value.trim();
+    const price = parseFloat(document.getElementById("price").value);
+    const stock = parseInt(document.getElementById("stock").value);
 
-    const query = searchInput.value.trim().toLowerCase();
-
-    resultsDiv.innerHTML = "";
-    message.textContent = "";
-    countDiv.textContent = "";
-
-    if(query === ""){
+    if(!id || !name || !category || isNaN(price) || isNaN(stock)){
+        alert("Please enter valid details");
         return;
     }
 
-    loader.style.display = "block";
-
-    try{
-
-        const response = await fetch("products.json");
-
-        if(!response.ok){
-            throw new Error("Failed to fetch data");
-        }
-
-        const products = await response.json();
-
-        const filtered = products.filter(product =>
-            product.name.toLowerCase().includes(query) ||
-            product.category.toLowerCase().includes(query)
-        );
-
-        loader.style.display = "none";
-
-        if(filtered.length === 0){
-            message.textContent = "No results found";
-            return;
-        }
-
-        countDiv.textContent = `Results found: ${filtered.length}`;
-
-        filtered.forEach(product => {
-
-            const card = document.createElement("div");
-            card.className = "card";
-
-            card.innerHTML = `
-                <strong>${highlight(product.name, query)}</strong><br>
-                Category: ${highlight(product.category, query)}<br>
-                Price: ₹${product.price}
-            `;
-
-            resultsDiv.appendChild(card);
-        });
-
+    if(products.find(p => p.id === id)){
+        alert("Product ID already exists");
+        return;
     }
-    catch(error){
-        loader.style.display = "none";
-        message.textContent = "Error fetching products.";
-        console.error(error);
-    }
+
+    products.push({id,name,category,price,stock});
+    displayProducts();
 }
 
-searchInput.addEventListener("input", debounce(searchProducts, 500));
+// Edit Product
+function editProduct(id){
+
+    const product = products.find(p => p.id === id);
+
+    const newPrice = prompt("Enter new price:", product.price);
+    const newStock = prompt("Enter new stock:", product.stock);
+
+    if(newPrice !== null && !isNaN(newPrice)){
+        product.price = parseFloat(newPrice);
+    }
+
+    if(newStock !== null && !isNaN(newStock)){
+        product.stock = parseInt(newStock);
+    }
+
+    displayProducts();
+}
+
+// Delete Product
+function deleteProduct(id){
+    products = products.filter(p => p.id !== id);
+    displayProducts();
+}
+
+// Search
+document.getElementById("search").addEventListener("input", function(){
+    const query = this.value.toLowerCase();
+    const filtered = products.filter(p =>
+        p.name.toLowerCase().includes(query)
+    );
+    displayProducts(filtered);
+});
+
+// Initial Load
+displayProducts();
 
 </script>
 
