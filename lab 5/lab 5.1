@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Employee Management (Single File)</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(135deg,#9af0ff,#fad0c4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+.container {
+    background: white;
+    padding: 25px;
+    width: 850px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+h2 { text-align:center; }
+
+input {
+    padding: 6px;
+    margin: 5px;
+}
+
+button {
+    padding: 6px 10px;
+    margin: 3px;
+    cursor: pointer;
+}
+
+table {
+    width:100%;
+    border-collapse: collapse;
+    margin-top:15px;
+}
+
+th, td {
+    border:1px solid #ccc;
+    padding:8px;
+    text-align:center;
+}
+
+th {
+    background:#ff986f;
+    color:white;
+}
+
+.message {
+    margin-top:10px;
+    font-weight:bold;
+}
+.success { color:green; }
+.error { color:red; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>📋 Employee Management</h2>
+
+<input type="text" id="id" placeholder="Employee ID">
+<input type="text" id="name" placeholder="Name">
+<input type="text" id="dept" placeholder="Department">
+<input type="number" id="salary" placeholder="Salary">
+<button onclick="addEmployee()">Add</button>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Department</th>
+<th>Salary</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+<div id="message" class="message"></div>
+</div>
+
+<!-- XML DATA INSIDE SAME FILE -->
+<script id="employeeData" type="text/xml">
+<employees>
+    <employee>
+        <id>101</id>
+        <name>Rahul</name>
+        <department>CSE</department>
+        <salary>50000</salary>
+    </employee>
+    <employee>
+        <id>102</id>
+        <name>Anjali</name>
+        <department>ECE</department>
+        <salary>55000</salary>
+    </employee>
+</employees>
+</script>
+
+<script>
+
+let xmlDoc = null;
+
+// Parse XML from script tag
+function loadEmployees() {
+    const xmlText = document.getElementById("employeeData").textContent;
+    const parser = new DOMParser();
+    xmlDoc = parser.parseFromString(xmlText, "text/xml");
+
+    if(xmlDoc.getElementsByTagName("parsererror").length > 0){
+        showMessage("Malformed XML Data", "error");
+        return;
+    }
+
+    displayEmployees();
+}
+
+// Display Employees
+function displayEmployees() {
+    const tableBody = document.getElementById("tableBody");
+    tableBody.innerHTML = "";
+
+    const employees = xmlDoc.getElementsByTagName("employee");
+
+    for (let i = 0; i < employees.length; i++) {
+
+        const id = employees[i].getElementsByTagName("id")[0].textContent;
+        const name = employees[i].getElementsByTagName("name")[0].textContent;
+        const dept = employees[i].getElementsByTagName("department")[0].textContent;
+        const salary = employees[i].getElementsByTagName("salary")[0].textContent;
+
+        const row = `
+        <tr>
+            <td>${id}</td>
+            <td>${name}</td>
+            <td>${dept}</td>
+            <td>${salary}</td>
+            <td>
+                <button onclick="updateEmployee('${id}')">Update</button>
+                <button onclick="deleteEmployee('${id}')">Delete</button>
+            </td>
+        </tr>`;
+
+        tableBody.innerHTML += row;
+    }
+}
+
+// Add Employee
+function addEmployee() {
+
+    const id = document.getElementById("id").value.trim();
+    const name = document.getElementById("name").value.trim();
+    const dept = document.getElementById("dept").value.trim();
+    const salary = document.getElementById("salary").value.trim();
+
+    if (!id || !name || !dept || !salary) {
+        showMessage("All fields required", "error");
+        return;
+    }
+
+    const employees = xmlDoc.getElementsByTagName("employee");
+
+    for(let i=0;i<employees.length;i++){
+        if(employees[i].getElementsByTagName("id")[0].textContent === id){
+            showMessage("Employee ID already exists", "error");
+            return;
+        }
+    }
+
+    const newEmp = xmlDoc.createElement("employee");
+
+    ["id","name","department","salary"].forEach((tag,index)=>{
+        const el = xmlDoc.createElement(tag);
+        el.textContent = [id,name,dept,salary][index];
+        newEmp.appendChild(el);
+    });
+
+    xmlDoc.getElementsByTagName("employees")[0].appendChild(newEmp);
+
+    displayEmployees();
+    showMessage("Employee added successfully", "success");
+}
+
+// Update Employee
+function updateEmployee(id) {
+
+    const employees = xmlDoc.getElementsByTagName("employee");
+
+    for (let i = 0; i < employees.length; i++) {
+
+        const empId = employees[i].getElementsByTagName("id")[0].textContent;
+
+        if (empId === id) {
+
+            const newDept = prompt("Enter new department:");
+            const newSalary = prompt("Enter new salary:");
+
+            if (newDept)
+                employees[i].getElementsByTagName("department")[0].textContent = newDept;
+
+            if (newSalary)
+                employees[i].getElementsByTagName("salary")[0].textContent = newSalary;
+
+            displayEmployees();
+            showMessage("Employee updated successfully", "success");
+            return;
+        }
+    }
+}
+
+// Delete Employee
+function deleteEmployee(id) {
+
+    const employees = xmlDoc.getElementsByTagName("employee");
+
+    for (let i = 0; i < employees.length; i++) {
+
+        const empId = employees[i].getElementsByTagName("id")[0].textContent;
+
+        if (empId === id) {
+            employees[i].parentNode.removeChild(employees[i]);
+            displayEmployees();
+            showMessage("Employee deleted successfully", "success");
+            return;
+        }
+    }
+}
+
+function showMessage(msg, type) {
+    const message = document.getElementById("message");
+    message.textContent = msg;
+    message.className = "message " + type;
+}
+
+loadEmployees();
+
+</script>
+
+</body>
+</html>
