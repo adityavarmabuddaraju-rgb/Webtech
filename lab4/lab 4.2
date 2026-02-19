@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Live Product Search</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.container{
+    width:90%;
+    max-width:650px;
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.25);
+}
+
+h2{
+    text-align:center;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    margin-bottom:10px;
+}
+
+.results{
+    margin-top:10px;
+}
+
+.card{
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    margin-bottom:10px;
+    transition:0.3s;
+}
+
+.card:hover{
+    transform:scale(1.02);
+    background:#f5f5ff;
+}
+
+.loader{
+    display:none;
+    text-align:center;
+    margin-top:10px;
+}
+
+.spinner{
+    width:25px;
+    height:25px;
+    border:4px solid #ccc;
+    border-top:4px solid #667eea;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+    margin:auto;
+}
+
+@keyframes spin{
+    to{ transform:rotate(360deg); }
+}
+
+.message{
+    text-align:center;
+    margin-top:10px;
+    font-weight:bold;
+    color:red;
+}
+
+.count{
+    text-align:right;
+    font-size:14px;
+    margin-top:5px;
+    color:#555;
+}
+
+.highlight{
+    background:yellow;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>🔍 Smart Product Search</h2>
+
+<input type="text" id="searchInput" placeholder="Search products...">
+
+<div class="loader" id="loader">
+    <div class="spinner"></div>
+</div>
+
+<div class="count" id="count"></div>
+<div class="results" id="results"></div>
+<div class="message" id="message"></div>
+
+</div>
+
+<script>
+
+const searchInput = document.getElementById("searchInput");
+const resultsDiv = document.getElementById("results");
+const message = document.getElementById("message");
+const loader = document.getElementById("loader");
+const countDiv = document.getElementById("count");
+
+let timer;
+
+// Debounce function
+function debounce(func, delay){
+    return function(){
+        clearTimeout(timer);
+        timer = setTimeout(func, delay);
+    }
+}
+
+// Highlight matched text
+function highlight(text, query){
+    const regex = new RegExp(`(${query})`, "gi");
+    return text.replace(regex, '<span class="highlight">$1</span>');
+}
+
+async function searchProducts(){
+
+    const query = searchInput.value.trim().toLowerCase();
+
+    resultsDiv.innerHTML = "";
+    message.textContent = "";
+    countDiv.textContent = "";
+
+    if(query === ""){
+        return;
+    }
+
+    loader.style.display = "block";
+
+    try{
+
+        const response = await fetch("products.json");
+
+        if(!response.ok){
+            throw new Error("Failed to fetch data");
+        }
+
+        const products = await response.json();
+
+        const filtered = products.filter(product =>
+            product.name.toLowerCase().includes(query) ||
+            product.category.toLowerCase().includes(query)
+        );
+
+        loader.style.display = "none";
+
+        if(filtered.length === 0){
+            message.textContent = "No results found";
+            return;
+        }
+
+        countDiv.textContent = `Results found: ${filtered.length}`;
+
+        filtered.forEach(product => {
+
+            const card = document.createElement("div");
+            card.className = "card";
+
+            card.innerHTML = `
+                <strong>${highlight(product.name, query)}</strong><br>
+                Category: ${highlight(product.category, query)}<br>
+                Price: ₹${product.price}
+            `;
+
+            resultsDiv.appendChild(card);
+        });
+
+    }
+    catch(error){
+        loader.style.display = "none";
+        message.textContent = "Error fetching products.";
+        console.error(error);
+    }
+}
+
+searchInput.addEventListener("input", debounce(searchProducts, 500));
+
+</script>
+
+</body>
+</html>
