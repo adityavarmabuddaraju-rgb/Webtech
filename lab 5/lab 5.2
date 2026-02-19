@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Library Book Tracker (Single File)</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background: linear-gradient(120deg,#89f7fe,#66a6ff);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    margin:0;
+}
+.container{
+    width:90%;
+    max-width:900px;
+    background:#fff;
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.2);
+}
+h2{
+    text-align:center;
+    margin-bottom:20px;
+}
+input,select,button{
+    padding:8px;
+    margin:5px;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+button{
+    background:#afa84c;
+    color:white;
+    cursor:pointer;
+}
+button:hover{
+    background:#388e8d;
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+th,td{
+    padding:10px;
+    border:1px solid #ccc;
+    text-align:center;
+}
+th{
+    background:#1976d2;
+    color:white;
+}
+.message{
+    margin-top:10px;
+    font-weight:bold;
+    text-align:center;
+}
+.success{ color:green; }
+.error{ color:red; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>📚 Library Book Tracker</h2>
+
+<input type="text" id="bid" placeholder="Book ID">
+<input type="text" id="btitle" placeholder="Title">
+<input type="text" id="bauthor" placeholder="Author">
+<select id="bstatus">
+<option value="">Status</option>
+<option>Available</option>
+<option>Issued</option>
+</select>
+
+<br>
+
+<button onclick="addBook()">Add</button>
+<button onclick="updateBook()">Update Status</button>
+<button onclick="deleteBook()">Delete</button>
+
+<div class="message" id="msg"></div>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Title</th>
+<th>Author</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="bookTable"></tbody>
+</table>
+</div>
+
+<!-- XML DATA INSIDE SAME FILE -->
+<script id="bookData" type="text/xml">
+<library>
+    <book>
+        <id>B101</id>
+        <title>Java Programming</title>
+        <author>James Gosling</author>
+        <status>Available</status>
+    </book>
+    <book>
+        <id>B102</id>
+        <title>Web Technologies</title>
+        <author>Tim Berners-Lee</author>
+        <status>Issued</status>
+    </book>
+</library>
+</script>
+
+<script>
+
+let xmlDoc;
+
+// Parse XML
+function loadBooks() {
+    const xmlText = document.getElementById("bookData").textContent;
+    const parser = new DOMParser();
+    xmlDoc = parser.parseFromString(xmlText, "text/xml");
+
+    if(xmlDoc.getElementsByTagName("parsererror").length > 0){
+        showMessage("Malformed XML data", "error");
+        return;
+    }
+
+    displayBooks();
+}
+
+// Display Books
+function displayBooks() {
+    const table = document.getElementById("bookTable");
+    table.innerHTML = "";
+
+    const books = xmlDoc.getElementsByTagName("book");
+
+    if(books.length === 0){
+        table.innerHTML = `<tr><td colspan="4">No books found</td></tr>`;
+        return;
+    }
+
+    for (let book of books) {
+        table.innerHTML += `
+        <tr>
+            <td>${book.getElementsByTagName("id")[0].textContent}</td>
+            <td>${book.getElementsByTagName("title")[0].textContent}</td>
+            <td>${book.getElementsByTagName("author")[0].textContent}</td>
+            <td>${book.getElementsByTagName("status")[0].textContent}</td>
+        </tr>`;
+    }
+}
+
+// Add Book
+function addBook() {
+
+    if (!bid.value || !btitle.value || !bauthor.value || !bstatus.value) {
+        showMessage("All fields required", "error");
+        return;
+    }
+
+    const books = xmlDoc.getElementsByTagName("book");
+
+    // Duplicate ID check
+    for(let book of books){
+        if(book.getElementsByTagName("id")[0].textContent === bid.value){
+            showMessage("Book ID already exists", "error");
+            return;
+        }
+    }
+
+    const book = xmlDoc.createElement("book");
+
+    ["id","title","author","status"].forEach((tag,i)=>{
+        const el = xmlDoc.createElement(tag);
+        el.textContent = [bid.value,btitle.value,bauthor.value,bstatus.value][i];
+        book.appendChild(el);
+    });
+
+    xmlDoc.documentElement.appendChild(book);
+
+    displayBooks();
+    showMessage("Book added successfully", "success");
+}
+
+// Update Status
+function updateBook() {
+
+    const books = xmlDoc.getElementsByTagName("book");
+
+    for (let book of books) {
+        if (book.getElementsByTagName("id")[0].textContent === bid.value) {
+
+            if(!bstatus.value){
+                showMessage("Select status to update", "error");
+                return;
+            }
+
+            book.getElementsByTagName("status")[0].textContent = bstatus.value;
+
+            displayBooks();
+            showMessage("Status updated successfully", "success");
+            return;
+        }
+    }
+
+    showMessage("Book not found", "error");
+}
+
+// Delete Book
+function deleteBook() {
+
+    const books = xmlDoc.getElementsByTagName("book");
+
+    for (let book of books) {
+        if (book.getElementsByTagName("id")[0].textContent === bid.value) {
+
+            book.parentNode.removeChild(book);
+            displayBooks();
+            showMessage("Book deleted successfully", "success");
+            return;
+        }
+    }
+
+    showMessage("Book not found", "error");
+}
+
+function showMessage(text, type){
+    const msg = document.getElementById("msg");
+    msg.textContent = text;
+    msg.className = "message " + type;
+}
+
+loadBooks();
+
+</script>
+
+</body>
+</html>
