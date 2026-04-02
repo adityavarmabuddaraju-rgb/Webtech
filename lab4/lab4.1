@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Username Availability Checker</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #4e73df, #1cc88a);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background: white;
+    padding: 35px;
+    width: 400px;
+    border-radius: 15px;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    text-align: center;
+    animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+    font-size: 14px;
+    transition: 0.3s;
+    outline: none;
+}
+
+input.valid {
+    border-color: #1cc88a;
+    box-shadow: 0 0 8px rgba(28,200,138,0.4);
+}
+
+input.invalid {
+    border-color: #e74a3b;
+    box-shadow: 0 0 8px rgba(231,74,59,0.4);
+}
+
+.message {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    min-height: 20px;
+}
+
+.error { color: #e74a3b; }
+.success { color: #1cc88a; }
+
+.counter {
+    font-size: 12px;
+    text-align: right;
+    color: gray;
+}
+
+.spinner {
+    display: none;
+    margin-top: 10px;
+}
+
+.spinner div {
+    width: 18px;
+    height: 18px;
+    border: 3px solid #ddd;
+    border-top: 3px solid #4e73df;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: auto;
+}
+
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 8px;
+    background: #4e73df;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #2e59d9;
+    transform: scale(1.03);
+}
+
+button:disabled {
+    background: gray;
+    cursor: not-allowed;
+    transform: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Create Account</h2>
+
+    <form id="registerForm">
+        <input 
+            type="text" 
+            id="username" 
+            placeholder="Enter username (min 3 characters)"
+            autocomplete="off"
+        >
+
+        <div class="counter" id="counter">0 characters</div>
+
+        <div class="spinner" id="spinner">
+            <div></div>
+        </div>
+
+        <div class="message" id="feedback"></div>
+
+        <button type="submit" id="submitBtn" disabled>
+            Register
+        </button>
+    </form>
+</div>
+
+<script>
+const usernameInput = document.getElementById("username");
+const feedback = document.getElementById("feedback");
+const spinner = document.getElementById("spinner");
+const submitBtn = document.getElementById("submitBtn");
+const counter = document.getElementById("counter");
+const form = document.getElementById("registerForm");
+
+let isAvailable = false;
+
+function debounce(func, delay) {
+    let timeout;
+    return function () {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(), delay);
+    };
+}
+
+async function checkUsername() {
+    const username = usernameInput.value.trim().toLowerCase();
+
+    feedback.textContent = "";
+    submitBtn.disabled = true;
+    isAvailable = false;
+    usernameInput.classList.remove("valid", "invalid");
+
+    if (username.length < 3) {
+        feedback.textContent = "Username must be at least 3 characters";
+        feedback.className = "message error";
+        usernameInput.classList.add("invalid");
+        return;
+    }
+
+    spinner.style.display = "block";
+
+    try {
+        const response = await fetch("users.json");
+
+        if (!response.ok) throw new Error("Failed to load users.json");
+
+        const data = await response.json();
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        if (data.usernames.includes(username)) {
+            feedback.textContent = "Username already taken ❌";
+            feedback.className = "message error";
+            usernameInput.classList.add("invalid");
+            isAvailable = false;
+        } else {
+            feedback.textContent = "Username available ✅";
+            feedback.className = "message success";
+            usernameInput.classList.add("valid");
+            isAvailable = true;
+            submitBtn.disabled = false;
+        }
+
+    } catch (err) {
+        feedback.textContent = "Error checking username.";
+        feedback.className = "message error";
+        usernameInput.classList.add("invalid");
+    }
+
+    spinner.style.display = "none";
+}
+
+usernameInput.addEventListener("input", function() {
+    counter.textContent = usernameInput.value.length + " characters";
+});
+
+usernameInput.addEventListener("input", debounce(checkUsername, 500));
+
+form.addEventListener("submit", function(e) {
+    if (!isAvailable) {
+        e.preventDefault();
+    } else {
+        alert("Registration Successful 🎉");
+        form.reset();
+        submitBtn.disabled = true;
+        counter.textContent = "0 characters";
+        usernameInput.classList.remove("valid");
+    }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Student Record System</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background: linear-gradient(120deg,#89f7fe,#66a6ff);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    margin:0;
+}
+.container{
+    width:90%;
+    max-width:900px;
+    background:#fff;
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.2);
+}
+h2{
+    text-align:center;
+    margin-bottom:20px;
+}
+input,button{
+    padding:8px;
+    margin:5px;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+button{
+    background:#4CAF50;
+    color:white;
+    cursor:pointer;
+}
+button:hover{
+    background:#2e7d32;
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+th,td{
+    padding:10px;
+    border:1px solid #ccc;
+    text-align:center;
+}
+th{
+    background:#1976d2;
+    color:white;
+}
+.message{
+    margin-top:10px;
+    font-weight:bold;
+    text-align:center;
+}
+.success{ color:green; }
+.error{ color:red; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>🎓 Student Record System</h2>
+
+<input type="text" id="sid" placeholder="Student ID">
+<input type="text" id="sname" placeholder="Name">
+<input type="text" id="scourse" placeholder="Course">
+<input type="number" id="smarks" placeholder="Marks">
+
+<br>
+
+<button onclick="addStudent()">Add</button>
+<button onclick="updateStudent()">Update</button>
+<button onclick="deleteStudent()">Delete</button>
+
+<div class="message" id="msg"></div>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Course</th>
+<th>Marks</th>
+</tr>
+</thead>
+<tbody id="studentTable"></tbody>
+</table>
+</div>
+
+<script>
+
+// JSON Data (Same as you provided)
+let students = [
+  {
+    "id": "1",
+    "name": "Rahul",
+    "course": "Computer Science",
+    "marks": 85
+  },
+  {
+    "id": "2",
+    "name": "Anita",
+    "course": "Information Technology",
+    "marks": 92
+  }
+];
+
+// Display Students
+function displayStudents(){
+    const table = document.getElementById("studentTable");
+    table.innerHTML = "";
+
+    if(students.length === 0){
+        table.innerHTML = `<tr><td colspan="4">No records found</td></tr>`;
+        return;
+    }
+
+    students.forEach(student=>{
+        table.innerHTML += `
+        <tr>
+            <td>${student.id}</td>
+            <td>${student.name}</td>
+            <td>${student.course}</td>
+            <td>${student.marks}</td>
+        </tr>`;
+    });
+}
+
+// Add Student
+function addStudent(){
+
+    if(!sid.value || !sname.value || !scourse.value || !smarks.value){
+        showMessage("All fields required","error");
+        return;
+    }
+
+    if(students.find(s => s.id === sid.value)){
+        showMessage("Student ID already exists","error");
+        return;
+    }
+
+    students.push({
+        id: sid.value,
+        name: sname.value,
+        course: scourse.value,
+        marks: parseInt(smarks.value)
+    });
+
+    displayStudents();
+    showMessage("Student added successfully","success");
+}
+
+// Update Student
+function updateStudent(){
+
+    const student = students.find(s => s.id === sid.value);
+
+    if(!student){
+        showMessage("Student not found","error");
+        return;
+    }
+
+    student.name = sname.value;
+    student.course = scourse.value;
+    student.marks = parseInt(smarks.value);
+
+    displayStudents();
+    showMessage("Student updated successfully","success");
+}
+
+// Delete Student
+function deleteStudent(){
+
+    const index = students.findIndex(s => s.id === sid.value);
+
+    if(index === -1){
+        showMessage("Student not found","error");
+        return;
+    }
+
+    students.splice(index,1);
+
+    displayStudents();
+    showMessage("Student deleted successfully","success");
+}
+
+function showMessage(text,type){
+    const msg = document.getElementById("msg");
+    msg.textContent = text;
+    msg.className = "message " + type;
+}
+
+displayStudents();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>User Activity Monitor</title>
+
+<style>
+/* ---------- BASE ---------- */
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(120deg, #c7d2fe, #e0e7ff);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ---------- GLASS CARD ---------- */
+.card {
+    width: 95%;
+    max-width: 950px;
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(12px);
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+/* ---------- HEADER ---------- */
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* ---------- INTERACTION ---------- */
+.interact {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.interact input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+/* ---------- BUTTONS ---------- */
+button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.export {
+    background: #595c62;
+    color: white;
+}
+
+.reset {
+    background: #dc2626;
+    color: white;
+}
+
+/* ---------- WARNING ---------- */
+.warning {
+    margin: 15px 0;
+    color: #b91c1c;
+    font-weight: bold;
+}
+
+/* ---------- TABLE ---------- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background: #eef2ff;
+}
+
+.click { color: #1d4ed8; }
+.key { color: #047857; }
+.focus { color: #7c3aed; }
+
+tbody {
+    display: block;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+thead, tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h1> User Activity Monitor</h1>
+
+    <div class="interact">
+        <input type="text" placeholder="Focus / Type here">
+        <button>Click Me</button>
+    </div>
+
+    <button class="export" onclick="exportLog()">Export</button>
+    <button class="reset" onclick="resetLog()">Reset</button>
+
+    <div class="warning" id="warning"></div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Time</th>
+                <th>Event</th>
+                <th>Target</th>
+                <th>Phase</th>
+            </tr>
+        </thead>
+        <tbody id="activityTable"></tbody>
+    </table>
+</div>
+
+<script>
+/* ---------- DATA ---------- */
+let activities = [];
+let clickCount = 0;
+const CLICK_LIMIT = 7;
+
+/* ---------- LOG ---------- */
+function logActivity(type, target, phase) {
+    activities.push({
+        time: new Date().toLocaleTimeString(),
+        type,
+        target,
+        phase
+    });
+    renderTable();
+}
+
+/* ---------- RENDER ---------- */
+function renderTable() {
+    const table = document.getElementById("activityTable");
+    table.innerHTML = "";
+
+    activities.forEach((a, i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${a.time}</td>
+            <td class="${a.type === 'Click' ? 'click' : a.type === 'Key' ? 'key' : 'focus'}">
+                ${a.type}
+            </td>
+            <td>${a.target}</td>
+            <td>${a.phase}</td>
+        `;
+        table.appendChild(row);
+    });
+}
+
+/* ---------- EVENTS ---------- */
+document.addEventListener("click", e => {
+    clickCount++;
+    logActivity("Click", e.target.tagName, "Bubbling");
+
+    if (clickCount >= CLICK_LIMIT) {
+        document.getElementById("warning").textContent =
+            "⚠ Too many clicks detected!";
+    }
+});
+
+document.addEventListener("keydown", e => {
+    logActivity("Key", e.key, "Bubbling");
+});
+
+document.addEventListener("focus", e => {
+    logActivity("Focus", e.target.tagName, "Capturing");
+}, true);
+
+/* ---------- RESET ---------- */
+function resetLog() {
+    activities = [];
+    clickCount = 0;
+    document.getElementById("warning").textContent = "";
+    renderTable();
+}
+
+/* ---------- EXPORT ---------- */
+function exportLog() {
+    if (!activities.length) return alert("No activity to export");
+
+    const text = activities.map((a, i) =>
+        `${i + 1}. ${a.time} | ${a.type} | ${a.target} | ${a.phase}`
+    ).join("\n");
+
+
+
+
+    const blob = new Blob([text], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "activity-log.txt";
+    link.click();
+}
+</script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+

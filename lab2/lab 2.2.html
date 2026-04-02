@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Multimedia Web Page</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        padding: 30px;
+        text-align: center;
+    }
+
+    h1 {
+        margin-bottom: 30px;
+    }
+
+    h2 {
+        margin-top: 40px;
+        color: #333;
+    }
+
+    .media-box {
+        background: #ffffff;
+        padding: 20px;
+        margin: 20px auto;
+        width: 520px;
+        border-radius: 12px;
+        box-shadow: 0 8px 18px rgba(0,0,0,0.2);
+    }
+
+    audio, video {
+        width: 100%;
+        margin-top: 10px;   
+    }
+    
+    .time {
+        margin-top: 10px;
+        font-weight: bold;
+        color: #444;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>HTML5 Multimedia Player</h1>
+
+<!-- Audio Section -->
+<div class="media-box">
+    <h2>Audio Player</h2>
+    <audio id="audioPlayer" controls>
+        <source src="audio.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <div class="time">
+        Current Time: <span id="audioTime">0:00</span>
+    </div>
+</div>
+
+<!-- Video Section -->
+<div class="media-box">
+    <h2>Video Player</h2>
+    <video id="videoPlayer" controls>
+        <source src="web_video.mp4" type="video/mp4">
+        Your browser does not support the video element.
+    </video>
+    <div class="time">
+        Current Time: <span id="videoTime">0:00</span>
+    </div>
+</div>
+
+<script>
+/* ===== AUDIO TIME UPDATE ===== */
+const audio = document.getElementById("audioPlayer");
+const audioTime = document.getElementById("audioTime");
+
+audio.addEventListener("timeupdate", () => {
+    audioTime.textContent = formatTime(audio.currentTime);
+});
+
+/* ===== VIDEO TIME UPDATE ===== */
+const video = document.getElementById("videoPlayer");
+const videoTime = document.getElementById("videoTime");
+
+video.addEventListener("timeupdate", () => {
+    videoTime.textContent = formatTime(video.currentTime);
+});
+
+/* ===== TIME FORMAT FUNCTION ===== */
+function formatTime(seconds) {
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return `${min}:${sec < 10 ? "0" : ""}${sec}`;
+}
+</script>
+
+</body>
+</html>
